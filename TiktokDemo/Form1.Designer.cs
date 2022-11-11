@@ -28,11 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.txtURL = new System.Windows.Forms.TextBox();
             this.btnGo = new System.Windows.Forms.Button();
             this.chromiumWebBrowser1 = new CefSharp.WinForms.ChromiumWebBrowser();
             this.btnParse = new System.Windows.Forms.Button();
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // txtURL
@@ -41,15 +42,15 @@
             this.txtURL.Name = "txtURL";
             this.txtURL.Size = new System.Drawing.Size(414, 21);
             this.txtURL.TabIndex = 0;
-            this.txtURL.Text = "https://www.tiktok.com/@ofeliavietnam";
+            this.txtURL.Text = "https://sokxayplus.com/";
             // 
             // btnGo
             // 
-            this.btnGo.Location = new System.Drawing.Point(433, 1);
+            this.btnGo.Location = new System.Drawing.Point(433, 3);
             this.btnGo.Name = "btnGo";
             this.btnGo.Size = new System.Drawing.Size(65, 23);
             this.btnGo.TabIndex = 1;
-            this.btnGo.Text = "解析";
+            this.btnGo.Text = "打开";
             this.btnGo.UseVisualStyleBackColor = true;
             this.btnGo.Click += new System.EventHandler(this.btnParse_Click);
             // 
@@ -58,42 +59,36 @@
             this.chromiumWebBrowser1.ActivateBrowserOnCreation = false;
             this.chromiumWebBrowser1.Location = new System.Drawing.Point(4, 31);
             this.chromiumWebBrowser1.Name = "chromiumWebBrowser1";
-            this.chromiumWebBrowser1.Size = new System.Drawing.Size(59, 435);
+            this.chromiumWebBrowser1.Size = new System.Drawing.Size(494, 435);
             this.chromiumWebBrowser1.TabIndex = 2;
             // 
             // btnParse
             // 
-            this.btnParse.Location = new System.Drawing.Point(648, 3);
+            this.btnParse.Location = new System.Drawing.Point(666, 3);
             this.btnParse.Name = "btnParse";
             this.btnParse.Size = new System.Drawing.Size(107, 23);
             this.btnParse.TabIndex = 3;
-            this.btnParse.Text = "解析";
+            this.btnParse.Text = "监听";
             this.btnParse.UseVisualStyleBackColor = true;
-            this.btnParse.Visible = false;
             this.btnParse.Click += new System.EventHandler(this.btnParse_Click_1);
             // 
-            // listBox1
+            // timer1
             // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 12;
-            this.listBox1.Location = new System.Drawing.Point(69, 30);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(429, 436);
-            this.listBox1.TabIndex = 4;
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick_1);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(512, 472);
-            this.Controls.Add(this.listBox1);
+            this.ClientSize = new System.Drawing.Size(1060, 472);
             this.Controls.Add(this.btnParse);
             this.Controls.Add(this.chromiumWebBrowser1);
             this.Controls.Add(this.btnGo);
             this.Controls.Add(this.txtURL);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Ticktok ";
+            this.Text = "lottery ";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -106,7 +101,7 @@
         private System.Windows.Forms.Button btnGo;
         private CefSharp.WinForms.ChromiumWebBrowser chromiumWebBrowser1;
         private System.Windows.Forms.Button btnParse;
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -15,7 +16,9 @@ using System.Windows.Forms;
 namespace TiktokDemo
 {
     public partial class Form1 : Form
-    {
+{
+
+       
         public Form1()
         {
             InitializeComponent();
@@ -23,161 +26,133 @@ namespace TiktokDemo
 
         private void btnParse_Click(object sender, EventArgs e)
         {
+            timer1.Enabled = false;
+            btnParse.Enabled = true;
             string  url = txtURL.Text;
             chromiumWebBrowser1.LoadUrl(url);
 
-            Thread.Sleep(1000 * 10);
-
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("function tempFunction() {");
-            sb.AppendLine("     var arry=[];");
-            //sb.AppendLine("     var obj=document.getElementsByClassName('tiktok-1mo2fkg-DivUserLinkContainer e797se20');");
-            sb.AppendLine("     var obj=document.getElementsByClassName('tiktok-rfcpgv-PUserDesc e797se29');");
-            
-            sb.AppendLine("  for (var i in obj){ arry.push(obj[i].innerHTML); }");
+           
 
 
-            sb.AppendLine("     return arry;");
-            sb.AppendLine("}");
-            sb.AppendLine("tempFunction();");
 
-            
-
-
-            var task = chromiumWebBrowser1.EvaluateScriptAsync(sb.ToString());
-            task.ContinueWith(t =>
-            {
-                if (!t.IsFaulted)
-                {
-                    var response = t.Result;
-
-                    if (response.Success == true)
-                    {
-                        FileStream  fs = File.OpenWrite(@"d:\tk.txt");
-                        StreamWriter streamWriter = new StreamWriter(fs);
-
-                        List<Object> list = (List<Object>)response.Result;
-                        //MessageBox.Show(list.Count.ToString());
-                        Regex regex = new Regex("/@([^\"]+)");
-
-                        List<string> listTiktok = new List<string>();
-
-                        foreach (Object item in list)
-                        {
-                            if (item != null && item is string)
-                            {
-                                string tempString = item.ToString();
-                                Match m = regex.Match(tempString);
-                                if (m.Success)
-
-                                {
-                                    string value = m.Groups[0].Value.Remove(0, 2);
-                                    if (value.LastIndexOf("/live") > -1)
-                                    {
-                                        value = value.Substring(0, value.Length - 5);
-                                      
-
-                                    }
-                                    streamWriter.WriteLine(value);
-                                    listTiktok.Add(value);
-                                }
-                                else
-                                {
-                                    streamWriter.WriteLine(tempString);
-                                    listTiktok.Add(tempString);
-
-                                }
-                            }
-
-                          
-
-
-                        }
-                        streamWriter.Close();
-                        fs.Close();
-
-
-                        listBox1.DataSource = listTiktok;
-                    }
-                }
-            }, TaskScheduler.FromCurrentSynchronizationContext());
 
         }
 
+        public static ServiceStack.Redis.RedisClient client = new ServiceStack.Redis.RedisClient("127.0.0.1", 6379);
+
+
+        HttpListener listener = new HttpListener();
         private void btnParse_Click_1(object sender, EventArgs e)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("function tempFunction() {");
-            sb.AppendLine("     var arry=[];");
-            sb.AppendLine("     var obj=document.getElementsByClassName('tiktok-1mo2fkg-DivUserLinkContainer e797se20');");
-            sb.AppendLine("  for (var i in obj){ arry.push(obj[i].innerHTML); }");
-           
-            
-            sb.AppendLine("     return arry;");
-            sb.AppendLine("}");
-            sb.AppendLine("tempFunction();");
+            //timer1.Enabled = false;
 
-            
-            var task = chromiumWebBrowser1.EvaluateScriptAsync(sb.ToString());
-            task.ContinueWith(t =>
+            timer1.Enabled= true;
+            btnParse.Enabled= false;
+            if (listener.IsListening)
             {
-                if (!t.IsFaulted)
+                listener.Stop();
+            }
+           
+            listener.Prefixes.Add("http://localhost:7878/"); //要监听的url范围
+            listener.Start(); //开始监听端口，接收客户端请求
+            Console.WriteLine("Listening");
+
+            ThreadStart threadStart = new ThreadStart(theadFun);
+            Thread thread = new Thread(threadStart);
+            thread.Start();
+
+        }
+
+        private void theadFun()
+        {
+            try
+            {
+                while (true)
                 {
-                    var response = t.Result;
-
-                    if (response.Success == true)
-                    {
-                        List<Object> list = (List < Object > )response.Result;
-                        Regex regex = new Regex("/@([^\"]+)");
-                      
-                        List<string> listTiktok = new List<string>();
-                        
-                        foreach (Object item in list)
-                        {
-                            if (item != null && item is string)
-                            { 
-                                string tempString = item.ToString();
-                                Match m = regex.Match(tempString);
-                                if (m.Success)
-
-                                {
-                                    string value = m.Groups[0].Value.Remove(0,2);
-                                    if (value.LastIndexOf("/live")>-1)
-                                    {
-                                        value = value.Substring(0, value.Length - 5);
-                                    }
-                                    listTiktok.Add(value);
-                                }
-                            }
-
-
-
-                        }
-
-                       
-                        listBox1.DataSource = listTiktok;
-                    }
+                    //获取一个客户端请求为止
+                    HttpListenerContext context = listener.GetContext();
+                    //将其处理过程放入线程池
+                    System.Threading.ThreadPool.QueueUserWorkItem(ProcessHttpClient, context);
                 }
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                listener.Stop(); //关闭HttpListener
+            }
+
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            ContextMenuStrip listboxMenu = new ContextMenuStrip();
-            ToolStripMenuItem rightMenu = new ToolStripMenuItem("Copy");
-            rightMenu.Click += new EventHandler(Copy_Click);
-            listboxMenu.Items.AddRange(new ToolStripItem[] { rightMenu });
-            listBox1.ContextMenuStrip = listboxMenu;
+          
         }
 
-        private void Copy_Click(object sender, System.EventArgs e)
-        {
-            try
-            {
-                Clipboard.SetText(listBox1.Items[listBox1.SelectedIndex].ToString());
-            }
-            catch { }
 
+        //客户请求处理
+        static void ProcessHttpClient(object obj)
+        {
+            HttpListenerContext context = obj as HttpListenerContext;
+            HttpListenerRequest request = context.Request;
+            HttpListenerResponse response = context.Response;
+
+            //do something as you want
+            string responseString = client.Get<string>("caipiao") ;// string.Format(" {0}", DateTime.Now);
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+            response.ContentLength64 = buffer.Length;
+            System.IO.Stream output = response.OutputStream;
+            output.Write(buffer, 0, buffer.Length);
+
+            //关闭输出流，释放相应资源
+            output.Close();
+        }
+
+
+        private void timer1_Tick_1(object sender, EventArgs e)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("function tempFunction() {");
+
+            //sb.AppendLine("     var obj=document.getElementsByClassName('tiktok-1mo2fkg-DivUserLinkContainer e797se20');");
+            //sb.AppendLine("     var obj=document.getElementsByClassName('tiktok-rfcpgv-PUserDesc e797se29');");
+            sb.AppendLine("     var obj=document.body;");
+
+
+
+            // sb.AppendLine(" alert(obj.innerHTML) ; ");
+
+
+            sb.AppendLine("     return obj.innerHTML;");
+            sb.AppendLine("}");
+            sb.AppendLine("tempFunction();");
+
+
+
+
+            var task = chromiumWebBrowser1.EvaluateScriptAsync(sb.ToString());
+            task.ContinueWith(t =>
+            {
+                if (!t.IsFaulted)
+                {
+                    var response = t.Result;
+
+                    if (response.Success == true)
+                    {
+
+
+                        var result = response.Result.ToString();
+                        client.Set<string>("caipiao", result.ToString());
+
+
+
+
+                    }
+                }
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
 }
